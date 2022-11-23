@@ -24,7 +24,10 @@ func isK3d() (bool, error) {
 	return false, nil
 }
 
-func rootIntoPod(podName string) error {
+func rootIntoPodContainer(podContainerName string) error {
+	seperator := ": "
+	podName := strings.Split(podContainerName, seperator)[0]
+	containerName := strings.Split(podContainerName, seperator)[1]
 	pod, err := k8sClient.getPodByName(podName)
 	if err != nil {
 		return err
@@ -35,7 +38,18 @@ func rootIntoPod(podName string) error {
 		return err
 	}
 
-	containerID := pod.Status.ContainerStatuses[0].ContainerID
+	containerID := ""
+	for _, c := range pod.Status.ContainerStatuses {
+		if c.Name == containerName {
+			containerID = c.ContainerID
+			break
+		}
+
+	}
+	if containerID == "" {
+		return fmt.Errorf("container %s not found in pod %s", containerName, podName)
+	}
+
 	containerID = strings.TrimPrefix(containerID, "containerd://")
 	runCCmd := fmt.Sprintf("runc --root /run/containerd/runc/k8s.io/ exec -t -u 0 %s sh", containerID)
 	cmd := []string{"sh", "-c", runCCmd}

@@ -123,7 +123,9 @@ func main() {
 
 		items := []list.Item{}
 		for _, i := range pods {
-			items = append(items, item(i.Name))
+			for _, c := range i.Spec.Containers {
+				items = append(items, item(fmt.Sprintf("%s: %s", i.Name, c.Name)))
+			}
 		}
 
 		const defaultWidth = 20
@@ -158,7 +160,7 @@ func main() {
 	}
 
 	fmt.Printf("gaining root access into: %s\n", string(choice))
-	err = rootIntoPod(podName)
+	err = rootIntoPodContainer(podName)
 	if err != nil {
 		panic(err)
 	}

@@ -21,3 +21,4 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/.kube:
 ## TODO
 - [ ] remove dependency of `docker exec`
 - [ ] add support for containers that run a from scratch image or do not have a shell (`sh`)
+- [ ] make readOnlyRootFilesystem writeable
