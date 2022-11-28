@@ -13,7 +13,7 @@ import (
 )
 
 type k8sClient struct {
-	clientset *kubernetes.Clientset
+	Clientset *kubernetes.Clientset
 }
 
 var K8sClient = &k8sClient{}
@@ -23,7 +23,7 @@ func init() {
 	if err != nil {
 		panic(err.Error())
 	}
-	K8sClient.clientset = clientset
+	K8sClient.Clientset = clientset
 }
 
 func getK8sClient() (*kubernetes.Clientset, error) {
@@ -52,7 +52,7 @@ func getK8sClient() (*kubernetes.Clientset, error) {
 func (k8s *k8sClient) GetPodByName(name string) (*v1.Pod, error) {
 	namespace := k8s.GetNamespace()
 
-	pod, err := k8s.clientset.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	pod, err := k8s.Clientset.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (k8s *k8sClient) GetPodByName(name string) (*v1.Pod, error) {
 func (k8s *k8sClient) GetRunningPods() ([]v1.Pod, error) {
 	namespace := k8s.GetNamespace()
 
-	pods, err := k8s.clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	pods, err := k8s.Clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (k8s *k8sClient) GetNamespace() string {
 }
 
 func (k8s *k8sClient) GetNodes() ([]v1.Node, error) {
-	nodes, err := k8s.clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	nodes, err := k8s.Clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (k8s *k8sClient) GetNodes() ([]v1.Node, error) {
 }
 
 func (k8s *k8sClient) GetNodeOfPod(pod v1.Pod) (*v1.Node, error) {
-	node, err := k8s.clientset.CoreV1().Nodes().Get(context.TODO(), pod.Spec.NodeName, metav1.GetOptions{})
+	node, err := k8s.Clientset.CoreV1().Nodes().Get(context.TODO(), pod.Spec.NodeName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
