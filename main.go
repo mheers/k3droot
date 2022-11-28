@@ -117,7 +117,7 @@ func main() {
 		// check if the argument is a pod name
 		podName = os.Args[1]
 	} else {
-		pods, err := helpers.K8sClient.GetRunningPods()
+		pods, err := helpers.K8s.GetRunningPods()
 		if err != nil {
 			panic(err)
 		}
@@ -133,7 +133,7 @@ func main() {
 
 		l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 
-		namespace := helpers.K8sClient.GetNamespace()
+		namespace := helpers.K8s.GetNamespace()
 		title := fmt.Sprintf("There are %d running pods in %s:", len(pods), namespace)
 		l.Title = title
 		l.SetShowStatusBar(false)

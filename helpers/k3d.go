@@ -10,7 +10,7 @@ import (
 
 // checks if local running cluster is a k3s cluster
 func IsK3d() (bool, error) {
-	nodes, err := K8sClient.GetNodes()
+	nodes, err := K8s.GetNodes()
 	if err != nil {
 		return false, err
 	}
@@ -28,12 +28,12 @@ func RootIntoPodContainer(podContainerName string) error {
 	seperator := ": "
 	podName := strings.Split(podContainerName, seperator)[0]
 	containerName := strings.Split(podContainerName, seperator)[1]
-	pod, err := K8sClient.GetPodByName(podName)
+	pod, err := K8s.GetPodByName(podName)
 	if err != nil {
 		return err
 	}
 
-	nodeOfPod, err := K8sClient.GetNodeOfPod(*pod)
+	nodeOfPod, err := K8s.GetNodeOfPod(*pod)
 	if err != nil {
 		return err
 	}
