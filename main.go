@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mheers/k3droot/helpers"
 )
 
 const listHeight = 14
@@ -100,7 +101,7 @@ func (m model) View() string {
 
 func main() {
 
-	k3d, err := isK3d()
+	k3d, err := helpers.IsK3d()
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +117,7 @@ func main() {
 		// check if the argument is a pod name
 		podName = os.Args[1]
 	} else {
-		pods, err := k8sClient.getRunningPods()
+		pods, err := helpers.K8sClient.GetRunningPods()
 		if err != nil {
 			panic(err)
 		}
@@ -132,7 +133,7 @@ func main() {
 
 		l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 
-		namespace := k8sClient.getNamespace()
+		namespace := helpers.K8sClient.GetNamespace()
 		title := fmt.Sprintf("There are %d running pods in %s:", len(pods), namespace)
 		l.Title = title
 		l.SetShowStatusBar(false)
@@ -160,7 +161,7 @@ func main() {
 	}
 
 	fmt.Printf("gaining root access into: %s\n", string(choice))
-	err = rootIntoPodContainer(podName)
+	err = helpers.RootIntoPodContainer(podName)
 	if err != nil {
 		panic(err)
 	}

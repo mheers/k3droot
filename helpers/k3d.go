@@ -1,4 +1,4 @@
-package main
+package helpers
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 )
 
 // checks if local running cluster is a k3s cluster
-func isK3d() (bool, error) {
-	nodes, err := k8sClient.getNodes()
+func IsK3d() (bool, error) {
+	nodes, err := K8sClient.GetNodes()
 	if err != nil {
 		return false, err
 	}
@@ -24,16 +24,16 @@ func isK3d() (bool, error) {
 	return false, nil
 }
 
-func rootIntoPodContainer(podContainerName string) error {
+func RootIntoPodContainer(podContainerName string) error {
 	seperator := ": "
 	podName := strings.Split(podContainerName, seperator)[0]
 	containerName := strings.Split(podContainerName, seperator)[1]
-	pod, err := k8sClient.getPodByName(podName)
+	pod, err := K8sClient.GetPodByName(podName)
 	if err != nil {
 		return err
 	}
 
-	nodeOfPod, err := k8sClient.getNodeOfPod(*pod)
+	nodeOfPod, err := K8sClient.GetNodeOfPod(*pod)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func rootIntoPodContainer(podContainerName string) error {
 	runCCmd := fmt.Sprintf("runc --root /run/containerd/runc/k8s.io/ exec -t -u 0 %s sh", containerID)
 	cmd := []string{"sh", "-c", runCCmd}
 
-	err = execIntoDockerContainer(nodeOfPod.Name, cmd)
+	err = ExecIntoDockerContainer(nodeOfPod.Name, cmd)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func rootIntoPodContainer(podContainerName string) error {
 	return nil
 }
 
-func execIntoDockerContainer(containerName string, cmds []string) error {
+func ExecIntoDockerContainer(containerName string, cmds []string) error {
 
 	prg := "docker"
 

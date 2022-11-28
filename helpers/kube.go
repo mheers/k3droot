@@ -1,4 +1,4 @@
-package main
+package helpers
 
 import (
 	"context"
@@ -12,18 +12,18 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-type K8sClient struct {
+type k8sClient struct {
 	clientset *kubernetes.Clientset
 }
 
-var k8sClient = &K8sClient{}
+var K8sClient = &k8sClient{}
 
 func init() {
 	clientset, err := getK8sClient()
 	if err != nil {
 		panic(err.Error())
 	}
-	k8sClient.clientset = clientset
+	K8sClient.clientset = clientset
 }
 
 func getK8sClient() (*kubernetes.Clientset, error) {
@@ -49,8 +49,8 @@ func getK8sClient() (*kubernetes.Clientset, error) {
 	return clientset, err
 }
 
-func (k8s *K8sClient) getPodByName(name string) (*v1.Pod, error) {
-	namespace := k8s.getNamespace()
+func (k8s *k8sClient) GetPodByName(name string) (*v1.Pod, error) {
+	namespace := k8s.GetNamespace()
 
 	pod, err := k8s.clientset.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
@@ -60,8 +60,8 @@ func (k8s *K8sClient) getPodByName(name string) (*v1.Pod, error) {
 	return pod, nil
 }
 
-func (k8s *K8sClient) getRunningPods() ([]v1.Pod, error) {
-	namespace := k8s.getNamespace()
+func (k8s *k8sClient) GetRunningPods() ([]v1.Pod, error) {
+	namespace := k8s.GetNamespace()
 
 	pods, err := k8s.clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -79,7 +79,7 @@ func (k8s *K8sClient) getRunningPods() ([]v1.Pod, error) {
 	return runningPods, nil
 }
 
-func (k8s *K8sClient) getNamespace() string {
+func (k8s *k8sClient) GetNamespace() string {
 	clientCfg, _ := clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	namespace := clientCfg.Contexts[clientCfg.CurrentContext].Namespace
 
@@ -89,7 +89,7 @@ func (k8s *K8sClient) getNamespace() string {
 	return namespace
 }
 
-func (k8s *K8sClient) getNodes() ([]v1.Node, error) {
+func (k8s *k8sClient) GetNodes() ([]v1.Node, error) {
 	nodes, err := k8s.clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (k8s *K8sClient) getNodes() ([]v1.Node, error) {
 	return nodes.Items, nil
 }
 
-func (k8s *K8sClient) getNodeOfPod(pod v1.Pod) (*v1.Node, error) {
+func (k8s *k8sClient) GetNodeOfPod(pod v1.Pod) (*v1.Node, error) {
 	node, err := k8s.clientset.CoreV1().Nodes().Get(context.TODO(), pod.Spec.NodeName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
