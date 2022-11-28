@@ -4,10 +4,12 @@ import (
 	"context"
 	"flag"
 	"path/filepath"
+	"sync"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
@@ -18,35 +20,78 @@ type K8sClient struct {
 
 var K8s = &K8sClient{}
 
-func init() {
-	clientset, err := getK8sClient()
-	if err != nil {
-		panic(err.Error())
-	}
-	K8s.Clientset = clientset
+var (
+	Ctx  = context.Background()
+	once sync.Once
+)
+
+func Init() (*K8sClient, error) {
+	var err error
+	once.Do(func() {
+
+		clusterConfig, err := getClusterConfig()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		// create the clientset
+		clientset, err := kubernetes.NewForConfig(clusterConfig)
+		if err != nil {
+			panic(err.Error())
+		}
+		K8s.Clientset = clientset
+	})
+	return K8s, err
 }
 
-func getK8sClient() (*kubernetes.Clientset, error) {
-	var kubeconfig *string
+func getClusterConfig() (*rest.Config, error) {
+	k8sInCluster := false
+	if k8sInCluster {
+		return getInClusterConfig()
+	}
+	return getOutOfClusterConfig()
+}
+
+func getInClusterConfig() (*rest.Config, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	return config, err
+}
+
+func getOutOfClusterConfig() (*rest.Config, error) {
+	var kubeconfig string
+	var defaultPath string
+	kcFlag := flag.Lookup("kubeconfig")
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		defaultPath = filepath.Join(home, ".kube", "config")
+		if kcFlag == nil {
+			flag.StringVar(&kubeconfig, "kubeconfig", defaultPath, "(optional) absolute path to the kubeconfig file")
+		} else {
+			kubeconfig = kcFlag.Value.String()
+		}
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		defaultPath = ""
+		if kcFlag == nil {
+			flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
+		} else {
+			kubeconfig = kcFlag.Value.String()
+		}
 	}
 	flag.Parse()
 
+	if kubeconfig == "" {
+		kubeconfig = defaultPath
+	}
+
 	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
 	}
 
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return clientset, err
+	return config, nil
 }
 
 func (k8s *K8sClient) GetPodByName(name string) (*v1.Pod, error) {

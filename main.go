@@ -100,6 +100,10 @@ func (m model) View() string {
 }
 
 func main() {
+	_, err := helpers.Init()
+	if err != nil {
+		panic(err)
+	}
 
 	k3d, err := helpers.IsK3d()
 	if err != nil {
