@@ -18,9 +18,8 @@ type K8sClient struct {
 	Clientset *kubernetes.Clientset
 }
 
-var K8s = &K8sClient{}
-
 var (
+	K8s  = &K8sClient{}
 	Ctx  = context.Background()
 	once sync.Once
 )
@@ -97,7 +96,7 @@ func getOutOfClusterConfig() (*rest.Config, error) {
 func (k8s *K8sClient) GetPodByName(name string) (*v1.Pod, error) {
 	namespace := k8s.GetNamespace()
 
-	pod, err := k8s.Clientset.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	pod, err := k8s.Clientset.CoreV1().Pods(namespace).Get(Ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +107,7 @@ func (k8s *K8sClient) GetPodByName(name string) (*v1.Pod, error) {
 func (k8s *K8sClient) GetRunningPods() ([]v1.Pod, error) {
 	namespace := k8s.GetNamespace()
 
-	pods, err := k8s.Clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	pods, err := k8s.Clientset.CoreV1().Pods(namespace).List(Ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +134,7 @@ func (k8s *K8sClient) GetNamespace() string {
 }
 
 func (k8s *K8sClient) GetNodes() ([]v1.Node, error) {
-	nodes, err := k8s.Clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	nodes, err := k8s.Clientset.CoreV1().Nodes().List(Ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +143,7 @@ func (k8s *K8sClient) GetNodes() ([]v1.Node, error) {
 }
 
 func (k8s *K8sClient) GetNodeOfPod(pod v1.Pod) (*v1.Node, error) {
-	node, err := k8s.Clientset.CoreV1().Nodes().Get(context.TODO(), pod.Spec.NodeName, metav1.GetOptions{})
+	node, err := k8s.Clientset.CoreV1().Nodes().Get(Ctx, pod.Spec.NodeName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
