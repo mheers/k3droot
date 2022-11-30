@@ -121,7 +121,7 @@ func main() {
 		// check if the argument is a pod name
 		podName = os.Args[1]
 	} else {
-		pods, err := helpers.K8s.GetRunningPods()
+		pods, err := helpers.K8s.GetRunningPodsInCurrentNamespace()
 		if err != nil {
 			panic(err)
 		}
