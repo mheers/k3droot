@@ -106,13 +106,13 @@ func (k8s *K8sClient) GetPodByNamespaceAndName(namespace, name string) (*v1.Pod,
 	return pod, nil
 }
 
-func (k8s *K8sClient) GetPodsByImage(imageName string, exactMatch bool) ([]v1.Pod, error) {
+func (k8s *K8sClient) GetPodsByImage(imageName string, exactMatch bool) ([]*v1.Pod, error) {
 	allPods, err := k8s.GetPodsByNamespace("", false)
 	if err != nil {
 		return nil, err
 	}
 
-	foundPods := []v1.Pod{}
+	foundPods := []*v1.Pod{}
 	for _, pod := range allPods {
 		for _, container := range pod.Spec.Containers {
 			if exactMatch {
@@ -136,32 +136,32 @@ func (k8s *K8sClient) GetPodByNameInCurrentNamespace(name string) (*v1.Pod, erro
 	return k8s.GetPodByNamespaceAndName(namespace, name)
 }
 
-func (k8s *K8sClient) GetAllRunningPods() ([]v1.Pod, error) {
+func (k8s *K8sClient) GetAllRunningPods() ([]*v1.Pod, error) {
 	return k8s.GetPodsByNamespace(metav1.NamespaceAll, true)
 }
 
-func (k8s *K8sClient) GetAllPods() ([]v1.Pod, error) {
+func (k8s *K8sClient) GetAllPods() ([]*v1.Pod, error) {
 	return k8s.GetPodsByNamespace(metav1.NamespaceAll, false)
 }
 
-func (k8s *K8sClient) GetPodsByNamespace(namespace string, requireRunning bool) ([]v1.Pod, error) {
+func (k8s *K8sClient) GetPodsByNamespace(namespace string, requireRunning bool) ([]*v1.Pod, error) {
 	pods, err := k8s.Clientset.CoreV1().Pods(namespace).List(Ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	// collect only pods that are running
-	var runningPods []v1.Pod
-	for _, pod := range pods.Items {
+	var runningPods []*v1.Pod
+	for x, pod := range pods.Items {
 		if pod.Status.Phase == v1.PodRunning || !requireRunning {
-			runningPods = append(runningPods, pod)
+			runningPods = append(runningPods, &pods.Items[x])
 		}
 	}
 
 	return runningPods, nil
 }
 
-func (k8s *K8sClient) GetRunningPodsInCurrentNamespace() ([]v1.Pod, error) {
+func (k8s *K8sClient) GetRunningPodsInCurrentNamespace() ([]*v1.Pod, error) {
 	namespace := k8s.GetNamespace()
 
 	return k8s.GetPodsByNamespace(namespace, true)
@@ -241,6 +241,9 @@ func (k8s *K8sClient) GetHostPathOfVolumeMount(namespace string, volumeMount v1.
 	pvc, err := k8s.GetPVC(namespace, volumeMount.PersistentVolumeClaim.ClaimName)
 	if err != nil {
 		return "", err
+	}
+	if pvc.Spec.VolumeName == "" {
+		return "", errors.New("volumeName is empty")
 	}
 	pv, err := k8s.GetPV(pvc.Spec.VolumeName)
 	if err != nil {
