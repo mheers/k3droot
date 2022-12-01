@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -68,8 +69,13 @@ func RootIntoNamespacePodContainer(namespace, podName, containerName, shell stri
 
 func RootIntoPodContainer(podContainerName string) error {
 	seperator := ": "
-	podName := strings.Split(podContainerName, seperator)[0]
-	containerName := strings.Split(podContainerName, seperator)[1]
+	parts := strings.Split(podContainerName, seperator)
+	podName := parts[0]
+
+	if len(parts) == 1 {
+		return errors.New("no container name specified")
+	}
+	containerName := parts[1]
 	namespace := K8s.GetNamespace()
 
 	return RootIntoNamespacePodContainer(namespace, podName, containerName, "sh")
