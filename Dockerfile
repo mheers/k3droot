@@ -1,4 +1,6 @@
-FROM golang:1.19-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
+
+RUN apk add --no-cache bash
 
 WORKDIR /workspace
 
@@ -11,13 +13,17 @@ RUN go mod download
 
 COPY / /workspace
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
-FROM alpine
+RUN [ "$(uname)" = Darwin ] && system=darwin || system=linux; \
+    ./ci/go-build.sh --os ${system} --arch $(echo $TARGETPLATFORM  | cut -d/ -f2)
+
+FROM --platform=$BUILDPLATFORM alpine
 
 RUN apk add --no-cache docker-cli
 
-COPY --from=builder /workspace/k3droot /usr/bin/k3droot
+COPY --from=builder /workspace/goapp /usr/bin/k3droot
 
 # Run the binary.
 ENTRYPOINT ["/usr/bin/k3droot"]
